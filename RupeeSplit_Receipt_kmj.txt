@@ -1,0 +1,17 @@
+==========================================
+           RUPEESPLIT RECEIPT             
+     Exact Paisa Precision Allocation     
+==========================================
+Occasion:       kmj
+Date:           4 October 2026
+Total Bill:     ₹1,200.00
+Total People:   2
+------------------------------------------
+INDIVIDUAL CONTRIBUTIONS:
+  Person 1:        ₹600.00
+  Person 2:        ₹600.00
+------------------------------------------
+Exact Sum of Shares: ₹1,200.00
+Reconciliation:      ₹0.00 (100% Exact Match)
+==========================================
+Thank you for splitting with RupeeSplit!

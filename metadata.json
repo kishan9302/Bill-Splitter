@@ -1,0 +1,6 @@
+{
+  "name": "Rupee Bill Splitter",
+  "description": "A precision bill splitting web app in Rupees with exact penny allocation, occasion tracking, input validation, and persistent storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rupee Bill Splitter - Precision Expense & Bill Splitting in ₹</title>
+    <meta name="description" content="A precision bill splitting web app in Rupees with exact penny allocation, occasion tracking, input validation, and persistent storage." />
+    <meta property="og:title" content="Rupee Bill Splitter - Precision Expense & Bill Splitting in ₹" />
+    <meta property="og:description" content="A precision bill splitting web app in Rupees with exact penny allocation, occasion tracking, input validation, and persistent storage." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Local relative stylesheet without external CDNs or web fonts -->
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Site Header / Brand Contract -->
+      <header class="site-header">
+        <div class="brand-lockup">
+          <div class="brand-icon" aria-hidden="true">₹</div>
+          <div>
+            <h1 class="brand-title">RupeeSplit</h1>
+            <p class="brand-tagline">Precision Bill & Expense Splitter</p>
+          </div>
+        </div>
+        <div class="header-status">
+          <!-- Interactive INR Exact Paisa Button -->
+          <button
+            type="button"
+            id="exactPaisaHeaderBtn"
+            class="currency-badge-btn"
+            title="Click to view INR Exact Paisa breakdown and precision rules"
+            aria-haspopup="dialog"
+            aria-controls="paisaInspectorModal"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>INR (₹) Exact Paisa</span>
+            <span class="info-dot" aria-hidden="true"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Layout -->
+      <main class="main-layout">
+        <!-- Input Form Section -->
+        <section class="card" aria-labelledby="formHeading">
+          <div class="card-header">
+            <h2 id="formHeading" class="card-title">Bill Details</h2>
+            <p class="card-subtitle">Enter your occasion, total bill in rupees, and group size</p>
+          </div>
+
+          <!-- Alert / Validation Notice Banner -->
+          <div id="noticeBanner" class="notice-banner hidden" role="alert" aria-live="assertive">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span id="noticeText"></span>
+          </div>
+
+          <form id="billSplitterForm" novalidate>
+            <!-- 1. Occasion Name -->
+            <div class="form-group">
+              <label for="occasionInput" class="form-label">
+                Occasion / Purpose <span class="optional">(e.g. Dinner, Trip, Rent)</span>
+              </label>
+              <div class="input-container">
+                <span class="input-icon-prefix" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  id="occasionInput"
+                  name="occasion"
+                  class="input-field has-icon"
+                  placeholder="e.g. Friday Team Lunch at Olive"
+                  maxlength="60"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <!-- 2. Bill Amount -->
+            <div class="form-group">
+              <label for="billInput" class="form-label">
+                Total Bill Amount in Rupees (₹)
+              </label>
+              <div class="input-container">
+                <span class="input-prefix" aria-hidden="true">₹</span>
+                <input
+                  type="number"
+                  id="billInput"
+                  name="billAmount"
+                  class="input-field has-prefix tabular-nums"
+                  placeholder="e.g. 1500.00"
+                  step="0.01"
+                  min="0.01"
+                  required
+                />
+              </div>
+              <div id="billError" class="inline-error" role="status" aria-live="polite"></div>
+
+              <!-- Quick Presets for Bill -->
+              <div class="presets-row">
+                <span class="preset-label">Quick amounts:</span>
+                <button type="button" class="preset-btn preset-bill-btn" data-amount="500">₹500</button>
+                <button type="button" class="preset-btn preset-bill-btn" data-amount="1200">₹1,200</button>
+                <button type="button" class="preset-btn preset-bill-btn" data-amount="2500">₹2,500</button>
+                <button type="button" class="preset-btn preset-bill-btn" data-amount="5000">₹5,000</button>
+              </div>
+            </div>
+
+            <!-- 3. Number of People -->
+            <div class="form-group">
+              <label for="peopleInput" class="form-label">
+                Number of People Sharing
+              </label>
+              <div class="stepper-container">
+                <button type="button" id="stepperMinus" class="stepper-btn" aria-label="Decrease number of people">−</button>
+                <div class="input-container" style="flex: 1;">
+                  <span class="input-icon-prefix" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                  </span>
+                  <input
+                    type="number"
+                    id="peopleInput"
+                    name="numPeople"
+                    class="input-field has-icon tabular-nums"
+                    placeholder="e.g. 2"
+                    min="1"
+                    step="1"
+                    required
+                  />
+                </div>
+                <button type="button" id="stepperPlus" class="stepper-btn" aria-label="Increase number of people">+</button>
+              </div>
+              <div id="peopleError" class="inline-error" role="status" aria-live="polite"></div>
+
+              <!-- Quick Presets for People -->
+              <div class="presets-row">
+                <span class="preset-label">Quick party size:</span>
+                <button type="button" class="preset-btn preset-people-btn" data-people="2">2</button>
+                <button type="button" class="preset-btn preset-people-btn" data-people="3">3</button>
+                <button type="button" class="preset-btn preset-people-btn" data-people="4">4</button>
+                <button type="button" class="preset-btn preset-people-btn" data-people="5">5</button>
+                <button type="button" class="preset-btn preset-people-btn" data-people="6">6</button>
+                <button type="button" class="preset-btn preset-people-btn" data-people="8">8</button>
+              </div>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="form-actions">
+              <button type="submit" id="calculateBtn" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="4" y1="9" x2="20" y2="9"></line>
+                  <line x1="4" y1="15" x2="20" y2="15"></line>
+                  <line x1="10" y1="3" x2="8" y2="21"></line>
+                  <line x1="16" y1="3" x2="14" y2="21"></line>
+                </svg>
+                Calculate Split
+              </button>
+              <button type="button" id="resetBtn" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+                Reset
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Split Results Section -->
+        <section class="card results-card" aria-labelledby="resultsHeading">
+          <h2 id="resultsHeading" class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Split Results</h2>
+
+          <!-- 1. Initial / Empty State -->
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+              </svg>
+            </div>
+            <h3 class="empty-title">Ready to Split</h3>
+            <p class="empty-desc">
+              Enter your bill amount and party size, then click <strong>Calculate Split</strong> to view individual shares down to the exact paisa.
+            </p>
+          </div>
+
+          <!-- 2. No Result / Validation Error State (Shown when bill or people is empty, zero or negative) -->
+          <div id="noResultState" class="no-result-state" style="display: none;" role="status">
+            <div class="no-result-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+              </svg>
+            </div>
+            <h3 class="no-result-title">No Result Available</h3>
+            <p class="no-result-message">
+              Cannot calculate bill split because the bill amount or the number of people is empty, zero, or negative. Both values must be greater than zero.
+            </p>
+            <ul class="no-result-checklist" id="noResultChecklist">
+              <!-- Dynamically populated checklist items -->
+            </ul>
+          </div>
+
+          <!-- 3. Results Content (Restored on reload via localStorage or shown on calculate) -->
+          <div id="resultsContent" style="display: none;">
+            <!-- Header with Occasion and Save indicator -->
+            <div class="result-header">
+              <div class="occasion-display">
+                <span class="occasion-label">Occasion Split</span>
+                <span id="displayOccasion" class="occasion-name">General Outing</span>
+              </div>
+              <div class="saved-indicator">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span id="displayTimestamp">Saved to storage</span>
+              </div>
+            </div>
+
+            <!-- Summary 3-Tile Metric Grid -->
+            <div class="summary-grid">
+              <div class="summary-tile">
+                <div class="summary-tile-label">Total Bill</div>
+                <div id="displayTotalBill" class="summary-tile-value tabular-nums">₹0.00</div>
+              </div>
+              <div class="summary-tile">
+                <div class="summary-tile-label">Total People</div>
+                <div id="displayPeopleCount" class="summary-tile-value">0 people</div>
+              </div>
+              <div class="summary-tile highlight">
+                <div class="summary-tile-label">Each Person Pays</div>
+                <div id="displayPerPerson" class="summary-tile-value tabular-nums">₹0.00</div>
+              </div>
+            </div>
+
+            <!-- Always-Visible INR Exact Paisa Ledger Card -->
+            <div id="exactPaisaBox" class="exact-paisa-box">
+              <div class="exact-paisa-header">
+                <span class="exact-paisa-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v12M16 10H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H8"></path>
+                  </svg>
+                  INR (₹) Exact Paisa Ledger
+                </span>
+                <button type="button" id="openPaisaDetailsBtn" class="exact-paisa-inspect-link">
+                  How math works &rarr;
+                </button>
+              </div>
+              <div class="exact-paisa-grid">
+                <div>
+                  <div class="exact-paisa-cell-label">Bill in Paise</div>
+                  <div id="paisaTotalCell" class="exact-paisa-cell-val tabular-nums">0 paise</div>
+                </div>
+                <div>
+                  <div class="exact-paisa-cell-label">Base Contribution</div>
+                  <div id="paisaBaseCell" class="exact-paisa-cell-val tabular-nums">0 paise</div>
+                </div>
+                <div>
+                  <div class="exact-paisa-cell-label">Remainder Paise</div>
+                  <div id="paisaRemainderCell" class="exact-paisa-cell-val tabular-nums">0 paise</div>
+                </div>
+                <div>
+                  <div class="exact-paisa-cell-label">Reconciliation</div>
+                  <div id="paisaMatchCell" class="exact-paisa-cell-val" style="color: var(--color-success);">100% Match</div>
+                </div>
+              </div>
+              <div id="exactPaisaSummaryText" class="exact-paisa-summary-text">
+                Every single paisa (₹0.01) is accounted for.
+              </div>
+            </div>
+
+            <!-- Individual Person Shares List -->
+            <div class="breakdown-section">
+              <div class="breakdown-heading">
+                <h3 class="breakdown-title">Individual Shares</h3>
+                <span class="breakdown-count">All contributions</span>
+              </div>
+              <div id="sharesList" class="shares-list">
+                <!-- Dynamically populated share items -->
+              </div>
+            </div>
+
+            <!-- Mathematical Precision Verification Box -->
+            <div class="verification-card">
+              <div class="verification-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Exact Math Guarantee</span>
+              </div>
+              <div class="verification-row">
+                <span>Original Bill:</span>
+                <span id="verifyBillAmount" class="tabular-nums">₹0.00</span>
+              </div>
+              <div class="verification-row">
+                <span>Sum of all shares:</span>
+                <span id="verifySharesSum" class="tabular-nums">₹0.00</span>
+              </div>
+              <div class="verification-row final">
+                <span>Difference:</span>
+                <span id="verifyDifference" class="tabular-nums">₹0.00 (Exact Match ✓)</span>
+              </div>
+            </div>
+
+            <!-- Result Actions -->
+            <div class="result-actions">
+              <button type="button" id="copyBreakdownBtn" class="btn btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy Details for WhatsApp
+              </button>
+              <button type="button" id="printBtn" class="btn btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Print / Save Receipt
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Site Footer -->
+      <footer class="site-footer">
+        <p>RupeeSplit &middot; 100% Client-Side Precision Bill Splitting &middot; Currency in INR (₹)</p>
+      </footer>
+    </div>
+
+    <!-- Modal 1: Print & Save Receipt Modal -->
+    <div id="receiptModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="receiptModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="receiptModalTitle" class="modal-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Print &amp; Save Receipt
+          </h3>
+          <button type="button" id="closeReceiptModalBtn" class="modal-close-btn" aria-label="Close receipt dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+            You can download the receipt as a clean text file, copy it, or print directly:
+          </p>
+          <pre id="receiptPreview" class="receipt-paper"></pre>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="downloadReceiptBtn" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Receipt (.txt)
+          </button>
+          <button type="button" id="copyReceiptModalBtn" class="btn btn-secondary btn-sm">
+            Copy Text
+          </button>
+          <button type="button" id="triggerPrintBtn" class="btn btn-secondary btn-sm">
+            Print Window
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: INR Exact Paisa Precision Calculator & Inspector -->
+    <div id="paisaInspectorModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="paisaModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="paisaModalTitle" class="modal-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v12M16 10H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H8"></path>
+            </svg>
+            INR (₹) Exact Paisa Precision
+          </h3>
+          <button type="button" id="closePaisaModalBtn" class="modal-close-btn" aria-label="Close dialog">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background-color: var(--color-primary-light); border: 1px solid var(--color-primary-border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+            <h4 style="font-size: 0.9375rem; font-weight: 700; color: var(--color-primary-text); margin-bottom: 0.25rem;">
+              Why Standard Splitters Drop Money
+            </h4>
+            <p style="font-size: 0.8125rem; color: var(--color-text-main); line-height: 1.5;">
+              When splitting ₹100.00 among 3 people, 100 &divide; 3 = <strong>33.3333...</strong>
+              If rounded down to ₹33.33 each, 3 &times; ₹33.33 = <strong>₹99.99</strong>, leaving <strong>1 paisa lost</strong>!
+            </p>
+          </div>
+
+          <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 0.5rem;">
+            How RupeeSplit Solves It Down to the Paisa:
+          </h4>
+          <ol style="font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.6; padding-left: 1.25rem; margin-bottom: 1.25rem;">
+            <li>All amounts are converted to integer <strong>paise</strong> (₹1 = 100 paise).</li>
+            <li>We compute the base share: <code>Math.floor(Total / People)</code>.</li>
+            <li>We find the remainder: <code>Total % People</code>.</li>
+            <li>The remainder paise are allocated <strong>1 paisa (+₹0.01) each</strong> to the first participants so that the individual shares <strong>sum up exactly to the total bill</strong>.</li>
+          </ol>
+
+          <div id="modalPaisaDynamicContent" style="background-color: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem;">
+            <!-- Filled dynamically with current or demo split -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="paisaModalOkBtn" class="btn btn-primary btn-sm">
+            Got It!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Standalone vanilla JavaScript linked relatively -->
+    <script src="./script.js" defer></script>
+  </body>
+</html>
